@@ -24,27 +24,19 @@ let posts = [
 
 
 export function getAll(category, take){
-    let postsRes= [...posts]
-    
+    let postsReturn= [...posts]
     if(category){
-        postsRes = postsRes.filter(product => (product.category === category))
+        postsReturn = postsReturn.filter(post => (post.category === category))
     }
-    
     if (take){
-        postsRes = postsRes.slice(0, take)
+        postsReturn = postsReturn.slice(0, take)
     }
 
-    return postsRes
+    return postsReturn
 }
 
 export function getById(id){
-    let postsRes= [...posts]
-   
-    const post = postsRes.find(product => (product.id== id))
-    if (!post){
-        return 404
-    }
-
+    const post = posts.find(post => (post.id== id))
     return post
 }
 
