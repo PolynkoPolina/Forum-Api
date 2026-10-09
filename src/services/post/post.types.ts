@@ -1,11 +1,9 @@
-import type { Post } from "../../domen/post/entity.js";
+import type { Post } from "../../domain/post/entity.js";
+import type { CreatePostData } from "../../domain/post/repository.js";
 
-export interface CreatePostData{
-    
-}
 
 export interface PostService{
-    getAll(category?:string, take?: number): Post[]
-    getById(id: number): Post | undefined | 'NO_ID'
-    addPost(body: Post): Promise<Post | 'POST_ALREADY_EXISTS'>
+    getAll(category?:string, take?: number): Promise<Post[]>
+    getById(id: number): Promise<Post | null>
+    addPost(body: CreatePostData): Promise<Post | 'POST_ALREADY_EXISTS'>
 }
