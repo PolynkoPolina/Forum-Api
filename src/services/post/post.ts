@@ -1,25 +1,24 @@
-import type { PostRepository } from '../../domen/post/repository.js'
+import type { PostRepository } from '../../domain/post/repository.js'
 import type { PostService } from './post.types.js'
 
 export function createPostService(postRepo: PostRepository): PostService{
     return{
-        getAll(category, take){
-            return postRepo.getAll(category, take)
+        async getAll(category, take){
+            return await postRepo.getAll(category, take)
         },
         
-        getById(id){
+        async getById(id){
             
-            if (!postRepo.getById(id)){
-                return 'NO_ID'
+            if (! await postRepo.getById(id)){
+                return null
             }
-            return postRepo.getById(id)
+            return await postRepo.getById(id)
         },
         
         async addPost(body) {
-            const {title, content, author, category } = body
+            const {title, content, authorId, category } = body
         
-        
-            const posts = postRepo.getAll()
+            const posts = await postRepo.getAll()
             const existingPost = posts.find(post => post.title === title)
         
             if (existingPost) {
@@ -29,7 +28,7 @@ export function createPostService(postRepo: PostRepository): PostService{
             const newPost = {
                 title: title,
                 content: content,
-                author: author,
+                authorId: authorId,
                 category: category
             }
             
