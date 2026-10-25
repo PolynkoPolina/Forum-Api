@@ -16,20 +16,13 @@ export function createPostService(postRepo: PostRepository): PostService{
         },
         
         async addPost(body) {
-            const {title, content, authorId, category } = body
-        
-            const posts = await postRepo.getAll()
-            const existingPost = posts.find(post => post.title === title)
-        
-            if (existingPost) {
-                return 'POST_ALREADY_EXISTS'
-            }
-        
+            const {title, content, authorId, categoryId } = body
+
             const newPost = {
                 title: title,
                 content: content,
                 authorId: authorId,
-                category: category
+                categoryId: categoryId
             }
             
             return await postRepo.addPost(newPost)
