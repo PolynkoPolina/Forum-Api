@@ -52,35 +52,34 @@ export function createPostHandler(postService: PostService): PostHandler{
         },
         async addPost(req, res){
             const body = req.body
-            const {title, content, authorId, category } = body
+            const {title, content, authorId, categoryId } = body
         
             if (
                 typeof title !== 'string' ||
                 typeof content !== 'string' ||
-                typeof category !== 'string' ||
+                typeof categoryId !== 'number' ||
                 typeof authorId !== 'number' ||
                 !title.trim() || 
                 !content.trim() ||
                 authorId < 0 || 
-                !category.trim()
+                categoryId < 0 
             ){
                 return res.status(422).json({message:
-                    'Invalid product data'
+                    'Invalid post data'
                 })
             }
             try{
                 const result = await postService.addPost(body)
-        
-                if (result === 'POST_ALREADY_EXISTS' ) {
-                    return res.status(409).json({
-                        message: 'Conflict. Post with this title already exists'
-                    })
-                }
-                
                 return res.status(201).json(result)
         
             } catch(error){
                 console.log(error)
+                
+                if (error === 'POST_ALREADY_EXISTS' ) {
+                    return res.status(409).json({
+                        message: 'Conflict. Post with this title already exists'
+                    })
+                }
                 return res.status(500).json({
                     message: "Internal server error"
                 })
