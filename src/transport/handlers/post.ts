@@ -6,9 +6,9 @@ import type { PostResponse } from '../dto/post/responses.js'
 import type { Request, Response } from "express";
 
 export interface PostHandler{
-    getAll(req: Request<{}, {},{}, {category : string, take: string}>, res: Response<PostResponse[] | PostError>): Promise<Response>
-    getById(req: Request<{ id:string }, {},{}, {}>, res: Response<PostResponse | PostError>): Promise<Response>
-    addPost(req: Request<{}, {}, PostRequest, {}>, res: Response<PostResponse | PostError>): Promise<Response>
+    getAll(req: Request<{}, {},{}, {category : string, take: string}>, res: Response<PostResponse[] | PostError>): void
+    getById(req: Request<{ id:string }, {},{}, {}>, res: Response<PostResponse | PostError>): void
+    addPost(req: Request<{}, {}, PostRequest, {}>, res: Response<PostResponse | PostError>): void
 }
 
 export function createPostHandler(postService: PostService): PostHandler{
@@ -75,7 +75,7 @@ export function createPostHandler(postService: PostService): PostHandler{
             } catch(error){
                 console.log(error)
                 
-                if (error === 'POST_ALREADY_EXISTS' ) {
+                if (error instanceof Error && error.message === 'POST_ALREADY_EXISTS') {
                     return res.status(409).json({
                         message: 'Conflict. Post with this title already exists'
                     })

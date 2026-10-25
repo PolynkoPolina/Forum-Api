@@ -1,9 +1,10 @@
 import { isStructuredError } from "@prisma/orm-postgres/utils"
 import type { Post } from "../domain/post/entity.js"
 import type { PostRepository } from "../domain/post/repository.js"
-import { db } from "../prisma/db.js"
+import type { PostgresClient } from "@prisma/orm-postgres/runtime"
+import type { Contract } from "../prisma/contract.js"
 
-export function createPostRepository():PostRepository{
+export function createPostRepository(db: PostgresClient<Contract>):PostRepository{
 
     return {
         async getAll(category, take) {
