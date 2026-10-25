@@ -60,7 +60,7 @@ export function createCategoryHandler(categoryService: CategoryService): Categor
             } catch(error){
                 console.log(error)
                 
-                if (error === 'CATEGORY_ALREADY_EXISTS' ) {
+                if (error instanceof Error && error.message === 'CATEGORY_ALREADY_EXISTS') {
                     return res.status(409).json({
                         message: 'Conflict. Category with this name already exists'
                     })
