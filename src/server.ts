@@ -1,4 +1,5 @@
 import express from 'express'
+import cors from 'cors'
 import { createPostRepository } from './repositories/post.js'
 import { createPostService } from './services/post/post.js'
 import { createPostHandler } from './transport/handlers/post.js'
@@ -44,6 +45,8 @@ const authRouter = createAuthRouter(authHandler)
 
 const app = express()
 app.use(express.json())
+app.use(cors({origin: 'http://localhost:5173'}))
+
 app.use('/posts', postRouter)
 app.use('/category', categoryRouter)
 app.use('/auth', authRouter)
