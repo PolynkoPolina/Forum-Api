@@ -1,7 +1,11 @@
 import type { Post } from "./entity.js";
 
-export type CreatePostData = Omit<Post, "id">
-
+export interface CreatePostData{
+    title: string
+    content: string
+    categoryId: number
+    authorId: number
+}
 
 export interface PostRepository{
     getAll(category?:string, take?: number): Promise<Post[]>

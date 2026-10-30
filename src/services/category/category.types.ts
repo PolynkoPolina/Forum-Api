@@ -4,5 +4,5 @@ import type { CreateCategoryData, ReturnCategoryData } from "../../domain/catego
 export interface CategoryService{
     getAll(name:string): Promise<ReturnCategoryData[]>
     getById(id: number): Promise<ReturnCategoryData | null>
-    addCategory(body: CreateCategoryData): Promise<ReturnCategoryData | undefined>
+    addCategory(input: CreateCategoryData): Promise<ReturnCategoryData | undefined>
 }
