@@ -4,7 +4,9 @@ import type { PostService } from './post.types.js'
 export function createPostService(postRepo: PostRepository): PostService{
     return{
         async getAll(category, take){
-            return await postRepo.getAll(category, take)
+            if(!category) return await postRepo.getAll(category, take)
+            const finalCategory = category.trim().toLowerCase()
+            return await postRepo.getAll(finalCategory, take)
         },
         
         async getById(id){
@@ -15,8 +17,8 @@ export function createPostService(postRepo: PostRepository): PostService{
             return await postRepo.getById(id)
         },
         
-        async addPost(body) {
-            const {title, content, authorId, categoryId } = body
+        async addPost(input) {
+            const {title, content, authorId, categoryId } = input
 
             const newPost = {
                 title: title,

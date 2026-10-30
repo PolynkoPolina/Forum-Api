@@ -107,6 +107,22 @@
               }
             },
             "relations": {
+              "author": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "authorId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              },
               "category": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -170,7 +186,23 @@
                 }
               }
             },
-            "relations": {},
+            "relations": {
+              "posts": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "authorId"
+                  ]
+                },
+                "to": {
+                  "model": "Post",
+                  "namespace": "public"
+                }
+              }
+            },
             "storage": {
               "fields": {
                 "email": {
@@ -279,9 +311,36 @@
                     "namespaceId": "public",
                     "tableName": "Category"
                   }
+                },
+                {
+                  "index": {
+                    "name": "Post_authorId_idx_e47547ed"
+                  },
+                  "source": {
+                    "columns": [
+                      "authorId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Post"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "User"
+                  }
                 }
               ],
               "indexes": [
+                {
+                  "columns": [
+                    "authorId"
+                  ],
+                  "name": "Post_authorId_idx_e47547ed",
+                  "prefix": "Post_authorId_idx",
+                  "unique": false
+                },
                 {
                   "columns": [
                     "categoryId"
@@ -341,7 +400,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "2bd812f428e1e5c09ce4756861bbdd838400284d55643784105b4cbd1c4b8acf"
+    "storageHash": "0f6720328a191427474fa1fa69f2c9b11f3767ddbc170ed931bf5fe448ce2739"
   },
   "capabilities": {
     "postgres": {

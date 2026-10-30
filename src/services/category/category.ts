@@ -4,7 +4,8 @@ import type { CategoryService } from './category.types.js'
 export function createCategoryService(categoryRepo: CategoryRepository): CategoryService{
     return{
         async getAll(name){
-            return await categoryRepo.getAll(name)
+            const finalName = name.trim().toLowerCase()
+            return await categoryRepo.getAll(finalName)
         },
         
         async getById(id){
@@ -15,10 +16,10 @@ export function createCategoryService(categoryRepo: CategoryRepository): Categor
             return await categoryRepo.getById(id)
         },
         
-        async addCategory(body) {
-        
+        async addCategory(input) {
+            const name = input.name.trim().toLowerCase()
             const newCategory = {
-                name: body.name,
+                name: name,
             }
             
             return await categoryRepo.addCategory(newCategory)
