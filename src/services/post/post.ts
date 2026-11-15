@@ -28,6 +28,9 @@ export function createPostService(postRepo: PostRepository): PostService{
             }
             
             return await postRepo.addPost(newPost)
+        },
+        async getByAuthorId(userId){
+            return await postRepo.getByAuthorId(userId)
         }
     }
 }

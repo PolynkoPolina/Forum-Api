@@ -70,6 +70,15 @@ export function createPostRepository(db: PostgresClient<Contract>):PostRepositor
 
             throw error;
             }
+        },
+        async getByAuthorId(userId){
+            const posts = await db.orm.public.Post
+            .where({ authorId : userId })
+            .include("category")
+            .include("author")
+            .all()
+
+            return posts
         }
     }
 }

@@ -1,7 +1,10 @@
+import type { ReturnCategoryData } from "../../../domain/category/repository"
+import type { PublicUser } from "../../../domain/user/repository"
+
 export interface PostResponse{
-    id?: number
+    id: number
     title: string
     content: string
-    categoryId:number
-    authorId: number
+    category: ReturnCategoryData
+    author: PublicUser
 }

@@ -7,12 +7,20 @@ export interface loginData{
     },
     tokens: {
         accessToken: string
+        refreshToken: string
     }
 }
 
+export interface refreshData{
+    accessToken : string
+    refreshToken: string
+}
+
 export interface AuthService{
-    register(input: CreateUserData): Promise<PublicUser>,
-    login(input:CreateUserData): Promise<loginData | null> 
+    register(input: CreateUserData): Promise<PublicUser>
+    login(input:CreateUserData): Promise<loginData | null>
+    refresh(refreshToken: string): Promise<refreshData>
+    getMyProfile(id: number): Promise<PublicUser | null>
 }
 
 export interface PasswordHasher {
@@ -22,4 +30,7 @@ export interface PasswordHasher {
 
 export interface TokenService{
     signAccessToken(userId: number): string
+    signRefreshToken(userId: number): string
+    verifyAccessToken(token:string): number
+    verifyRefreshToken(token:string) : number
 }

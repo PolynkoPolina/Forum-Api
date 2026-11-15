@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
 import { createPostRepository } from './repositories/post.js'
 import { createPostService } from './services/post/post.js'
 import { createPostHandler } from './transport/handlers/post.js'
@@ -15,13 +16,20 @@ import type { PasswordHasher, TokenService } from './services/auth/auth.types.js
 import { createAuthService } from './services/auth/auth.js'
 import { createAuthHandler } from './transport/handlers/auth.js'
 import { createAuthRouter } from './transport/routers/auth.js'
-import { signAccessToken } from './lib/jwt.js'
+import { signAccessToken, signRefreshToken, verifyAccessToken, verifyRefreshToken } from './lib/jwt.js'
+import { createRequireAuth } from './middlewares/requireAuth.js'
 
+const app = express()
+app.use(express.json())
+app.use(cors({origin: 'http://localhost:5173'}))
+app.use(cookieParser())
+
+const requireAuth = createRequireAuth(verifyAccessToken)
 
 const postRepository = createPostRepository(db)
 const postService = createPostService(postRepository)
 const postHandler = createPostHandler(postService)
-const postRouter = createPostRouter(postHandler)
+const postRouter = createPostRouter(postHandler, requireAuth)
 
 const categoryRepository = createCategoryRepository(db)
 const categoryService = createCategoryService(categoryRepository)
@@ -34,18 +42,18 @@ export const passwordHasher: PasswordHasher = {
 }
 
 export const tokenService: TokenService = {
-    signAccessToken: signAccessToken
+    signAccessToken: signAccessToken,
+    signRefreshToken: signRefreshToken,
+    verifyAccessToken: verifyAccessToken,
+    verifyRefreshToken: verifyRefreshToken
 }
+
 
 const userRepository = createUserRepository(db)
 const authService = createAuthService(userRepository, passwordHasher, tokenService)
 const authHandler = createAuthHandler(authService)
-const authRouter = createAuthRouter(authHandler)
+const authRouter = createAuthRouter(authHandler, requireAuth)
 
-
-const app = express()
-app.use(express.json())
-app.use(cors({origin: 'http://localhost:5173'}))
 
 app.use('/posts', postRouter)
 app.use('/category', categoryRouter)

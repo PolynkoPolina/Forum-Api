@@ -4,6 +4,9 @@ import type { Contract } from "../prisma/contract";
 
 export function createUserRepository(db: PostgresClient<Contract>):UserRepository{
     return{
+         async getById(id){
+            return await db.orm.public.User.where({id:id}).first()
+        },
         async getbyEmail(email){
             return await db.orm.public.User.where({email:email}).first()
         },
