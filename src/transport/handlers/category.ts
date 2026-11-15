@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import type { CategoryResponse } from "../dto/category/responses";
 import type { CategoryError } from "../dto/category/errors";
 import type { CategoryRequest } from "../dto/category/requests";
-import type { CategoryService } from '../../services/category/category.types'
+import type { CategoryService } from "../../services/category/category.types"
 
 export interface CategoryHandler{
     getAll(req: Request<{}, {},{}, {name:string}>, res: Response<CategoryResponse[] | CategoryError>): void
@@ -14,9 +14,9 @@ export function createCategoryHandler(categoryService: CategoryService): Categor
     return{
         async getAll(req, res) {
             const { name } = req.query
-            if (name && typeof name !== 'string'){
+            if (name && typeof name !== "string"){
                 return res.status(400).json({
-                    message: 'Wrong name of category'
+                    message: "Wrong name of category"
                 })
             }
             const result = await categoryService.getAll(name)
@@ -28,14 +28,14 @@ export function createCategoryHandler(categoryService: CategoryService): Categor
             const numId = Number(id)
             if (numId<0 || !Number.isInteger(numId)){
                 return res.status(400).json({
-                    message:'Wrong id'
+                    message:"Wrong id"
                 })
             }
             const result = await categoryService.getById(numId)
         
             if (result === null ) {
                 return res.status(404).json({
-                    message: 'There is no category with this id'
+                    message: "There is no category with this id"
                 })
             }
         
@@ -46,11 +46,11 @@ export function createCategoryHandler(categoryService: CategoryService): Categor
             const {name } = body
         
             if (
-                typeof name !== 'string' ||
+                typeof name !== "string" ||
                 !name.trim()
             ){
                 return res.status(422).json({message:
-                    'Invalid category name'
+                    "Invalid category name"
                 })
             }
             try{
@@ -60,9 +60,9 @@ export function createCategoryHandler(categoryService: CategoryService): Categor
             } catch(error){
                 console.log(error)
                 
-                if (error instanceof Error && error.message === 'CATEGORY_ALREADY_EXISTS') {
+                if (error instanceof Error && error.message === "CATEGORY_ALREADY_EXISTS") {
                     return res.status(409).json({
-                        message: 'Conflict. Category with this name already exists'
+                        message: "Conflict. Category with this name already exists"
                     })
                 }
                 return res.status(500).json({

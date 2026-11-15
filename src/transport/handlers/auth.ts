@@ -8,13 +8,15 @@ import type { AuthService } from "../../services/auth/auth.types";
 export interface AuthHandler{
     register(req: Request<{},{}, AuthRegisterRequest, {}>, res: Response<AuthRegisterResponse | AuthError>): void
     login(req: Request<{},{}, AuthLoginRequest, {}>, res: Response<AuthLoginResponse | AuthError>): void
+    refresh(req: Request, res:Response):void
+    getMyProfile(req: Request, res:Response<AuthLoginResponse | AuthError>):void
 }
 
 function validation(body:{email:string, password:string}){
     const {email, password} = body
     if (
-        typeof email !== 'string' ||
-        typeof password !== 'string' ||
+        typeof email !== "string" ||
+        typeof password !== "string" ||
         !email.trim() || 
         !password.trim() 
     ){
@@ -28,7 +30,7 @@ export function createAuthHandler(authService: AuthService): AuthHandler{
         async login(req,res){
             if(!validation(req.body)){
                 return res.status(422).json({message:
-                    'Invalid user data'
+                    "Invalid user data"
                 })
             }
             try{
@@ -39,23 +41,31 @@ export function createAuthHandler(authService: AuthService): AuthHandler{
                 }
 
                 const { user, tokens } = result
-                res.cookie('accessToken', tokens.accessToken, {
+                res.cookie("accessToken", tokens.accessToken, {
                     httpOnly:true,
-                    sameSite: 'lax',
-                    maxAge: 15*60*100,
-                    path: '/'
+                    sameSite: "lax",
+                    maxAge: Number(process.env.TOKEN_ACCESS_TIME),
+                    path: "/",
+                    secure: process.env.NODE_ENV === "production"
+                })
+                res.cookie("refreshToken", tokens.refreshToken, {
+                    httpOnly:true,
+                    sameSite: "lax",
+                    maxAge: Number(process.env.TOKEN_REFRESH_TIME),
+                    path: "/",
+                    secure: process.env.NODE_ENV === "production"
                 })
                 return res.status(200).json(user)
 
             } catch(error){
-                if( error instanceof Error && error.message === 'USER_NOT_FOUND') {
+                if( error instanceof Error && error.message === "USER_NOT_FOUND") {
                     return res.status(404).json({
-                        message: 'User with this email doesn`t exists'
+                        message: "User with this email doesn`t exists"
                     })
                 }
-                if( error instanceof Error && error.message === 'WRONG_PASSWORD') {
+                if( error instanceof Error && error.message === "WRONG_PASSWORD") {
                     return res.status(401).json({
-                        message: 'Wrong password'
+                        message: "Wrong password"
                     })
                 }
                 return res.status(500).json({
@@ -67,7 +77,7 @@ export function createAuthHandler(authService: AuthService): AuthHandler{
         async register(req, res){
             if(!validation(req.body)){
                 return res.status(422).json({message:
-                    'Invalid user data'
+                    "Invalid user data"
                 })
             }
             try{
@@ -77,11 +87,57 @@ export function createAuthHandler(authService: AuthService): AuthHandler{
             } catch(error){
                 console.log(error)
                 
-                if (error instanceof Error && error.message === 'USER_ALREADY_EXISTS') {
+                if (error instanceof Error && error.message === "USER_ALREADY_EXISTS") {
                     return res.status(409).json({
-                        message: 'Conflict. User with this email already exists'
+                        message: "Conflict. User with this email already exists"
                     })
                 }
+                return res.status(500).json({
+                    message: "Internal server error"
+                })
+            }
+        },
+        async refresh(req, res){
+            try{
+                const {refreshToken} = req.cookies
+                if(typeof refreshToken !== "string"){
+                    return res.status(401).json({message:"Not authorized"})
+                }
+                const result = await authService.refresh(refreshToken)
+                res.cookie("accessToken", result.accessToken, {
+                    httpOnly:true,
+                    sameSite: "lax",
+                    maxAge: Number(process.env.TOKEN_ACCESS_TIME),
+                    path: "/",
+                    secure: process.env.NODE_ENV === "production"
+                })
+                res.cookie("refreshToken", result.refreshToken, {
+                        httpOnly:true,
+                        sameSite: "lax",
+                        maxAge: Number(process.env.TOKEN_REFRESH_TIME),
+                        path: "/",
+                        secure: process.env.NODE_ENV === "production"
+                })
+                res.status(200).json({
+                    message: "Success"
+                })
+            } catch(error){
+                return res.status(500).json({
+                    message: "Internal server error"
+                })
+            }
+        },
+        async getMyProfile(req, res){
+            try{
+                const userId = res.locals.userId
+                const result = await authService.getMyProfile(userId)
+                if(!result) {
+                    return res.status(400).json({
+                        message: "Not authorized"
+                    })
+                }
+                return res.status(200).json(result)
+            }catch(error){
                 return res.status(500).json({
                     message: "Internal server error"
                 })

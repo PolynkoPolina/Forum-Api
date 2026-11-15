@@ -1,14 +1,15 @@
-import type { Post } from '../../domain/post/entity.js'
-import type { PostService } from '../../services/post/post.types.js';
-import type { PostError } from '../dto/post/errors.js';
-import type { PostRequest } from '../dto/post/requests.js'
-import type { PostResponse } from '../dto/post/responses.js'
+import type { Post } from "../../domain/post/entity.js"
+import type { PostService } from "../../services/post/post.types.js";
+import type { PostError } from "../dto/post/errors.js";
+import type { PostRequest } from "../dto/post/requests.js"
+import type { PostResponse } from "../dto/post/responses.js"
 import type { Request, Response } from "express";
 
 export interface PostHandler{
     getAll(req: Request<{}, {},{}, {category : string, take: string}>, res: Response<PostResponse[] | PostError>): void
     getById(req: Request<{ id:string }, {},{}, {}>, res: Response<PostResponse | PostError>): void
     addPost(req: Request<{}, {}, PostRequest, {}>, res: Response<PostResponse | PostError>): void
+    getByAuthorId(req: Request, res:Response<PostResponse[] | PostError>): void
 }
 
 export function createPostHandler(postService: PostService): PostHandler{
@@ -16,15 +17,15 @@ export function createPostHandler(postService: PostService): PostHandler{
         async getAll(req, res) {
             const {category, take} = req.query
             const numTake = Number(take)
-            if (category && typeof category !== 'string'){
+            if (category && typeof category !== "string"){
                 return res.status(400).json({
-                    message: 'Wrong category'
+                    message: "Wrong category"
                 })
             }
 
             if (numTake && (!Number.isInteger(numTake) || numTake <= 0)) {
                 return res.status(400).json({
-                    message:  'Wrong take'
+                    message:  "Wrong take"
                 })
             }
             const result = await postService.getAll(category, numTake)
@@ -37,14 +38,14 @@ export function createPostHandler(postService: PostService): PostHandler{
             const numId = Number(id)
             if (numId<0 || !Number.isInteger(numId)){
                 return res.status(400).json({
-                    message:'Wrong id'
+                    message:"Wrong id"
                 })
             }
             const result = await postService.getById(numId)
         
             if (result === null ) {
                 return res.status(404).json({
-                    message: 'There is no post with this id'
+                    message: "There is no post with this id"
                 })
             }
         
@@ -55,17 +56,17 @@ export function createPostHandler(postService: PostService): PostHandler{
             const {title, content, authorId, categoryId } = body
         
             if (
-                typeof title !== 'string' ||
-                typeof content !== 'string' ||
-                typeof categoryId !== 'number' ||
-                typeof authorId !== 'number' ||
+                typeof title !== "string" ||
+                typeof content !== "string" ||
+                typeof categoryId !== "number" ||
+                typeof authorId !== "number" ||
                 !title.trim() || 
                 !content.trim() ||
                 authorId < 0 || 
                 categoryId < 0 
             ){
                 return res.status(422).json({message:
-                    'Invalid post data'
+                    "Invalid post data"
                 })
             }
             try{
@@ -75,16 +76,28 @@ export function createPostHandler(postService: PostService): PostHandler{
             } catch(error){
                 console.log(error)
                 
-                if (error instanceof Error && error.message === 'POST_ALREADY_EXISTS') {
+                if (error instanceof Error && error.message === "POST_ALREADY_EXISTS") {
                     return res.status(409).json({
-                        message: 'Conflict. Post with this title already exists'
+                        message: "Conflict. Post with this title already exists"
                     })
                 }
                 return res.status(500).json({
                     message: "Internal server error"
                 })
             }
+        },
+        async getByAuthorId(req, res){
+            try{
+                const userId = res.locals.userId
+                const result = await postService.getByAuthorId(userId)
+                return res.status(200).json(result)
+            } catch(error){
+                return res.status(500).json({
+                    message: "Internal server error"
+                })
+            }
         }
+
     }
 }
 
