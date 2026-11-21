@@ -8,5 +8,6 @@ export function createAuthRouter(authHandler: AuthHandler, requireAuth: RequestH
     router.post("/login", authHandler.login)
     router.get("/refresh", authHandler.refresh)
     router.get("/profile", requireAuth, authHandler.getMyProfile)
+    router.get("/logout",authHandler.logout)
     return router
 }

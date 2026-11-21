@@ -19,8 +19,9 @@ export interface refreshData{
 export interface AuthService{
     register(input: CreateUserData): Promise<PublicUser>
     login(input:CreateUserData): Promise<loginData | null>
-    refresh(refreshToken: string): Promise<refreshData>
+    refresh(token: string): Promise<refreshData>
     getMyProfile(id: number): Promise<PublicUser | null>
+    logout(token: string): Promise<void>
 }
 
 export interface PasswordHasher {
@@ -33,4 +34,8 @@ export interface TokenService{
     signRefreshToken(userId: number): string
     verifyAccessToken(token:string): number
     verifyRefreshToken(token:string) : number
+}
+
+export interface TokenHasher{
+    hash(token:string): string
 }

@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken"
+import { createHash, randomUUID } from "node:crypto"
 
 const accessSecret = process.env.JWT_SECRET_ACCESS
     if(!accessSecret) throw new Error("JWT_ACCESS_SECRET is not defined")
@@ -20,7 +21,8 @@ export function signRefreshToken(userId:number):string{
     const token = jwt.sign({type: "refresh"}, refreshSecret!, {
         expiresIn: Number(process.env.TOKEN_REFRESH_TIME),
         algorithm: "HS256",
-        subject: String(userId)
+        subject: String(userId),
+        jwtid: randomUUID()
     })
     return token
 }
@@ -50,4 +52,9 @@ export function verifyAccessToken(token:string): number{
     }catch(error){
         throw new Error(String(error))
     }
+}
+
+export function hashRefreshToken(token:string): string{
+    const hash = createHash("sha256").update(token).digest("hex")
+    return hash
 }
