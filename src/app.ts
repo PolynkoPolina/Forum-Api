@@ -12,12 +12,13 @@ import { createCategoryHandler } from './transport/handlers/category.js'
 import { db } from './prisma/db.js'
 import { createUserRepository } from './repositories/user.js'
 import { hashPassword, verifyPassword } from './lib/password.js'
-import type { PasswordHasher, TokenService } from './services/auth/auth.types.js'
+import type { PasswordHasher, TokenHasher, TokenService } from './services/auth/auth.types.js'
 import { createAuthService } from './services/auth/auth.js'
 import { createAuthHandler } from './transport/handlers/auth.js'
 import { createAuthRouter } from './transport/routers/auth.js'
-import { signAccessToken, signRefreshToken, verifyAccessToken, verifyRefreshToken } from './lib/jwt.js'
+import { signAccessToken, signRefreshToken, verifyAccessToken, verifyRefreshToken, hashRefreshToken } from './lib/jwt.js'
 import { createRequireAuth } from './middlewares/requireAuth.js'
+import { createRefreshSessionRepository } from './repositories/refreshSession.js'
 
 const app = express()
 app.use(express.json())
@@ -48,9 +49,12 @@ export const tokenService: TokenService = {
     verifyRefreshToken: verifyRefreshToken
 }
 
-
+export const tokenHasher: TokenHasher = {
+    hash: hashRefreshToken
+}
+ 
 const userRepository = createUserRepository(db)
-const authService = createAuthService(userRepository, passwordHasher, tokenService)
+const authService = createAuthService(userRepository, passwordHasher, tokenService, createRefreshSessionRepository(db), tokenHasher)
 const authHandler = createAuthHandler(authService)
 const authRouter = createAuthRouter(authHandler, requireAuth)
 

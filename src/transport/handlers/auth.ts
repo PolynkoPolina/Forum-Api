@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import type { AuthLoginRequest, AuthRegisterRequest } from "../dto/auth/requests";
 import type { AuthLoginResponse, AuthRegisterResponse } from "../dto/auth/responses";
 import type { AuthError } from "../dto/auth/errors";
-import type { AuthService } from "../../services/auth/auth.types";
+import type { AuthService, refreshData } from "../../services/auth/auth.types";
 
 
 export interface AuthHandler{
@@ -10,6 +10,7 @@ export interface AuthHandler{
     login(req: Request<{},{}, AuthLoginRequest, {}>, res: Response<AuthLoginResponse | AuthError>): void
     refresh(req: Request, res:Response):void
     getMyProfile(req: Request, res:Response<AuthLoginResponse | AuthError>):void
+    logout(req: Request, res:Response): void
 }
 
 function validation(body:{email:string, password:string}){
@@ -25,6 +26,25 @@ function validation(body:{email:string, password:string}){
     return true
 }
 
+const secure = process.env.NODE_ENV === "production"
+
+function SetAuthCookies(res: Response, tokens: refreshData){
+    res.cookie("accessToken", tokens.accessToken, {
+            httpOnly:true,
+            sameSite: "lax",
+            maxAge: Number(process.env.TOKEN_ACCESS_TIME),
+            path: "/",
+            secure: secure
+        })
+    res.cookie("refreshToken", tokens.refreshToken, {
+            httpOnly:true,
+            sameSite: "lax",
+            maxAge: Number(process.env.TOKEN_REFRESH_TIME),
+            path: "/",
+            secure: secure
+        })
+}
+
 export function createAuthHandler(authService: AuthService): AuthHandler{
     return{
         async login(req,res){
@@ -35,26 +55,11 @@ export function createAuthHandler(authService: AuthService): AuthHandler{
             }
             try{
                 const result = await authService.login(req.body)
-
                 if (!result) {
                     throw new Error
                 }
-
                 const { user, tokens } = result
-                res.cookie("accessToken", tokens.accessToken, {
-                    httpOnly:true,
-                    sameSite: "lax",
-                    maxAge: Number(process.env.TOKEN_ACCESS_TIME),
-                    path: "/",
-                    secure: process.env.NODE_ENV === "production"
-                })
-                res.cookie("refreshToken", tokens.refreshToken, {
-                    httpOnly:true,
-                    sameSite: "lax",
-                    maxAge: Number(process.env.TOKEN_REFRESH_TIME),
-                    path: "/",
-                    secure: process.env.NODE_ENV === "production"
-                })
+                SetAuthCookies(res, tokens)
                 return res.status(200).json(user)
 
             } catch(error){
@@ -83,7 +88,6 @@ export function createAuthHandler(authService: AuthService): AuthHandler{
             try{
                 const result = await authService.register(req.body)
                 return res.status(201).json(result)
-        
             } catch(error){
                 console.log(error)
                 
@@ -104,20 +108,7 @@ export function createAuthHandler(authService: AuthService): AuthHandler{
                     return res.status(401).json({message:"Not authorized"})
                 }
                 const result = await authService.refresh(refreshToken)
-                res.cookie("accessToken", result.accessToken, {
-                    httpOnly:true,
-                    sameSite: "lax",
-                    maxAge: Number(process.env.TOKEN_ACCESS_TIME),
-                    path: "/",
-                    secure: process.env.NODE_ENV === "production"
-                })
-                res.cookie("refreshToken", result.refreshToken, {
-                        httpOnly:true,
-                        sameSite: "lax",
-                        maxAge: Number(process.env.TOKEN_REFRESH_TIME),
-                        path: "/",
-                        secure: process.env.NODE_ENV === "production"
-                })
+                SetAuthCookies(res, result)
                 res.status(200).json({
                     message: "Success"
                 })
@@ -141,6 +132,31 @@ export function createAuthHandler(authService: AuthService): AuthHandler{
                 return res.status(500).json({
                     message: "Internal server error"
                 })
+            }
+        },
+        async logout(req, res) {
+            const token = req.cookies?.refreshToken
+            try {
+                if (typeof token != 'string' && token.length <0){ 
+                    res.status(401).json({message: "unauthorized" })
+                    return
+                }
+                await authService.logout(token) 
+                res.clearCookie("accessToken", { 
+                    httpOnly: true, 
+                    sameSite: "lax",
+                    path: "/", 
+                    })
+                res.clearCookie("refreshToken", {
+                    httpOnly: true,
+                     sameSite: "lax",
+                    path: "/auth"
+                    })
+                res.status(200).json({ message: 'Success'})
+            }
+            catch (error){ 
+                console.log(error)
+                res.status (500).json({message: "Internal server error" }) 
             }
         }
     }
