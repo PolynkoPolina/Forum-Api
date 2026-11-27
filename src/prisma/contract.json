@@ -171,14 +171,14 @@
               "createdAt": {
                 "nullable": false,
                 "type": {
-                  "codecId": "pg/timestamptz-temporal@1",
+                  "codecId": "pg/timestamptz-date@1",
                   "kind": "scalar"
                 }
               },
               "expiresIn": {
                 "nullable": false,
                 "type": {
-                  "codecId": "pg/timestamptz-temporal@1",
+                  "codecId": "pg/timestamptz-date@1",
                   "kind": "scalar"
                 }
               },
@@ -457,7 +457,7 @@
             "RefreshSession": {
               "columns": {
                 "createdAt": {
-                  "codecId": "pg/timestamptz-temporal@1",
+                  "codecId": "pg/timestamptz-date@1",
                   "dataType": "pg/timestamptz",
                   "default": {
                     "expression": "now()",
@@ -466,7 +466,7 @@
                   "nullable": false
                 },
                 "expiresIn": {
-                  "codecId": "pg/timestamptz-temporal@1",
+                  "codecId": "pg/timestamptz-date@1",
                   "dataType": "pg/timestamptz",
                   "nullable": false
                 },
@@ -571,7 +571,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "259f638c88e3a31dac2cd9306f11a94bcb5456b16b1efb8843fc5010bf7e13f4"
+    "storageHash": "db9118f051d7832b02b1877ba6cbd1776433f63fa151f23ae46a48c817e65a2f"
   },
   "capabilities": {
     "postgres": {
