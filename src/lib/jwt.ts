@@ -1,60 +1,86 @@
-import jwt from "jsonwebtoken"
-import { createHash, randomUUID } from "node:crypto"
+import { createHash, randomUUID } from "node:crypto";
+import jwt from "jsonwebtoken";
+import type { TokenService } from "../services/auth/auth.types.js";
 
-const accessSecret = process.env.JWT_SECRET_ACCESS
-    if(!accessSecret) throw new Error("JWT_ACCESS_SECRET is not defined")
+type TokenKind = "access" | "refresh";
 
-const refreshSecret = process.env.JWT_SECRET_REFRESH
-    if(!refreshSecret) throw new Error("JWT_REFRESH_SECRET is not defined")
-
-export function signAccessToken(userId:number):string {
-    const token = jwt.sign({},accessSecret!, {
-        expiresIn: Number(process.env.TOKEN_ACCESS_TIME),
-        algorithm: "HS256",
-        subject: String(userId)
-    })
-    return token
+export interface TokenServiceOptions {
+	secretAccess: string;
+	secretRefresh: string;
+	accessTime: number;
+	refreshTime: number;
 }
 
-export function signRefreshToken(userId:number):string{
-    
-    const token = jwt.sign({type: "refresh"}, refreshSecret!, {
-        expiresIn: Number(process.env.TOKEN_REFRESH_TIME),
-        algorithm: "HS256",
-        subject: String(userId),
-        jwtid: randomUUID()
-    })
-    return token
+interface SignParams {
+	userId: number;
+	type: TokenKind;
+	secret: string;
+	ttlMs: number;
 }
 
-export function verifyRefreshToken(token:string): number{
-    const payload= jwt.verify(token, refreshSecret!, {algorithms: ["HS256"]})
-    if(typeof payload == "string" || typeof payload.sub !== "string" ) {
-        throw new Error()
-    }
-    const userId = Number(payload.sub)
-    if(Number.isSafeInteger(userId) || userId <= 0 ) throw new Error()
-    
-    return userId
+interface VerifyParams {
+	token: string;
+	type: TokenKind;
+	secret: string;
+	errorCode: string;
 }
 
+export function createTokenService(options: TokenServiceOptions): TokenService {
+	function sign({ userId, type, secret, ttlMs }: SignParams): string {
+		return jwt.sign({ type }, secret, {
+			algorithm: "HS256",
+			subject: String(userId),
+			expiresIn: Math.floor(ttlMs / 1000),
+			jwtid: randomUUID(),
+		});
+	}
 
-export function verifyAccessToken(token:string): number{
-    try{
-        const payload= jwt.verify(token, accessSecret!, {algorithms: ["HS256"]})
-        if(typeof payload == "string" || typeof payload.sub !== "string" ) {
-            throw new Error()
-        }
-        const userId = Number(payload.sub)
-        if(Number.isSafeInteger(userId) || userId <= 0 ) throw new Error()
-        
-        return userId
-    }catch(error){
-        throw new Error(String(error))
-    }
-}
+	function verify({ token, type, secret, errorCode }: VerifyParams): number {
+		try {
+			const data = jwt.verify(token, secret, { algorithms: ["HS256"] });
+			if (
+				typeof data === "string" ||
+				data.type !== type ||
+				typeof data.sub !== "string"
+			)
+				throw new Error();
+			const userId = Number(data.sub);
+			if (!Number.isSafeInteger(userId) || userId <= 0) throw new Error();
+			return userId;
+		} catch {
+			throw new Error(errorCode);
+		}
+	}
 
-export function hashRefreshToken(token:string): string{
-    const hash = createHash("sha256").update(token).digest("hex")
-    return hash
+	return {
+		signAccess: (userId) =>
+			sign({
+				userId,
+				type: "access",
+				secret: options.secretAccess,
+				ttlMs: options.accessTime,
+			}),
+		signRefresh: (userId) =>
+			sign({
+				userId,
+				type: "refresh",
+				secret: options.secretRefresh,
+				ttlMs: options.refreshTime,
+			}),
+		verifyAccess: (token) =>
+			verify({
+				token,
+				type: "access",
+				secret: options.secretAccess,
+				errorCode: "INVALID_ACCESS_TOKEN",
+			}),
+		verifyRefresh: (token) =>
+			verify({
+				token,
+				type: "refresh",
+				secret: options.secretRefresh,
+				errorCode: "INVALID_REFRESH_TOKEN",
+			}),
+		hash: (token) => createHash("sha256").update(token).digest("hex"),
+	};
 }

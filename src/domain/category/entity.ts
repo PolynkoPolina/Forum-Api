@@ -1,7 +1,7 @@
-import type { Post } from "../post/entity"
+import type { Post } from "../post/entity";
 
 export interface Category {
-  id: number
-  name:  string
-  posts: Post[]
+	id: number;
+	name: string;
+	posts: Post[];
 }

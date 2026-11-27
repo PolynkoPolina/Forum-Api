@@ -1,8 +1,19 @@
 import type { RefreshSession } from "./entity";
 
-export interface RefreshSessionRepository{
-    getByHash(tokenHash:string): Promise<RefreshSession | null>,
-    rotate(oldTokenHash: string, newTokenHash: string, expiresIn:Date): Promise<void>,
-    create(tokenHash:string, userId: number, expiresIn:Date): Promise<void>,
-    deleByHash(tokenHash:string) : Promise<void>
+type createData = {
+	tokenHash: string;
+	userId: number;
+	expiresIn: Date;
+};
+type rotateData = {
+	oldTokenHash: string;
+	newTokenHash: string;
+	expiresIn: Date;
+};
+
+export interface RefreshSessionRepository {
+	getByHash(tokenHash: string): Promise<RefreshSession | null>;
+	rotate(data: rotateData): Promise<void>;
+	create(data: createData): Promise<void>;
+	deleByHash(tokenHash: string): Promise<void>;
 }

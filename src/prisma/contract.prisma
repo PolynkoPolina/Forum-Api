@@ -30,6 +30,6 @@ model RefreshSession{
   userId     Int
   user       User @relation(fields:[userId], references: [id])
   tokenHash  String
-  expiresIn  DateTime
-  createdAt  DateTime @default(now())
+  expiresIn  TimestamptzJsDate()
+  createdAt  TimestamptzJsDate() @default(now())
 }
